@@ -1,17 +1,33 @@
-// Import express
 const express = require('express');
-const app = express();
+const mysql = require('mysql2');
+require('dotenv').config();
 
-// Middleware to parse JSON requests
+const app = express();
 app.use(express.json());
 
-// Basic route
-app.get('/', (req, res) => {
-  res.send('Hello, Node.js server is running!');
+// Create MySQL connection
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
-// Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Connect to database
+db.connect(err => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL database');
 });
+
+// Simple route
+app.get('/', (req, res) => {
+  res.send('MySQL + Node.js server is running!');
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+module.exports = db;
