@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lost Items Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lost Items Tracker</h1>
+
+  <form id="itemForm">
+    <label>Item Name</label>
+    <input type="text" id="itemname" required />
+
+    <label>Owner Name</label>
+    <input type="text" id="ownername" />
+
+    <label>Owner Number</label>
+    <input type="text" id="ownernumber" />
+
+    <label>Item Color</label>
+    <input type="text" id="itemcolor" />
+
+    <label>Description</label>
+    <textarea id="description"></textarea>
+
+    <label>Date Lost</label>
+    <input type="date" id="datelost" />
+
+    <label>Location Lost</label>
+    <input type="text" id="locationlost" />
+
+    <button type="submit">Add Item</button>
+  </form>
+
+  <h2>All Lost Items</h2>
+  <table id="itemsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Item</th>
+        <th>Owner</th>
+        <th>Number</th>
+        <th>Color</th>
+        <th>Description</th>
+        <th>Date Lost</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_URL = 'http://localhost:5000/items';
+
+    // Handle form submission
+    document.getElementById('itemForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const itemData = {
+        itemname: document.getElementById('itemname').value,
+        ownername: document.getElementById('ownername').value,
+        ownernumber: document.getElementById('ownernumber').value,
+        itemcolor: document.getElementById('itemcolor').value,
+        description: document.getElementById('description').value,
+        datelost: document.getElementById('datelost').value,
+        locationlost: document.getElementById('locationlost').value
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(itemData)
+        });
+
+        if (!response.ok) throw new Error('Failed to add item');
+
+        alert('Item added successfully');
+        e.target.reset();
+        fetchItems(); // refresh table
+      } catch (err) {
+        console.error(err);
+        alert('Error adding item');
+      }
+    });
+
+    // Fetch and display items
+    async function fetchItems() {
+      try {
+        const res = await fetch(API_URL);
+        const items = await res.json();
+
+        const tbody = document.querySelector('#itemsTable tbody');
+        tbody.innerHTML = '';
+
+        items.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.itemid}</td>
+            <td>${item.itemname}</td>
+            <td>${item.ownername || ''}</td>
+            <td>${item.ownernumber || ''}</td>
+            <td>${item.itemcolor || ''}</td>
+            <td>${item.description || ''}</td>
+            <td>${item.datelost ? item.datelost.split('T')[0] : ''}</td>
+            <td>${item.locationlost || ''}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Error fetching items:', err);
+      }
+    }
+
+    // Initial load
+    fetchItems();
+  </script>
+</body>
+</html>

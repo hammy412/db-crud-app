@@ -41,6 +41,7 @@ app.post('/items', (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    console.log('Received POST data:', req.body);
     res.status(201).json({ itemid: results.insertId, itemname, ownername, ownernumber, itemcolor, description, datelost, locationlost });
   });
 });
