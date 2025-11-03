@@ -61,6 +61,28 @@
       background-color: #007bff;
       color: white;
     }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background-color: #b02a37;
+    }
+    .edit-btn {
+      background-color: #2E8B57;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .edit-btn:hover {
+      background-color: #d39e00;
+    }
   </style>
 </head>
 <body>
@@ -103,6 +125,7 @@
         <th>Description</th>
         <th>Date Lost</th>
         <th>Location</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -136,12 +159,69 @@
 
         alert('Item added successfully');
         e.target.reset();
-        fetchItems(); // refresh table
+        fetchItems();
       } catch (err) {
         console.error(err);
         alert('Error adding item');
       }
     });
+
+    // Delete item
+    async function deleteItem(id) {
+      if (!confirm('Are you sure you want to remove this item?')) return;
+
+      try {
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Delete failed');
+        alert('Item removed successfully');
+        fetchItems();
+      } catch (err) {
+        console.error(err);
+        alert('Error deleting item');
+      }
+    }
+
+    // Edit + Save item
+    async function saveItem(id, button) {
+      const row = button.closest('tr');
+      const cells = row.querySelectorAll('td');
+
+      const updatedData = {
+        itemname: cells[1].innerText,
+        ownername: cells[2].innerText,
+        ownernumber: cells[3].innerText,
+        itemcolor: cells[4].innerText,
+        description: cells[5].innerText,
+        datelost: cells[6].innerText,
+        locationlost: cells[7].innerText
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedData)
+        });
+
+        if (!res.ok) throw new Error('Update failed');
+
+        alert('Item updated successfully');
+        fetchItems();
+      } catch (err) {
+        console.error(err);
+        alert('Error updating item');
+      }
+    }
+
+    function enableEditing(row, button) {
+      const cells = row.querySelectorAll('td');
+      for (let i = 1; i <= 7; i++) cells[i].setAttribute('contenteditable', 'true');
+
+      button.textContent = 'Save';
+      button.onclick = () => saveItem(cells[0].innerText, button);
+    }
 
     // Fetch and display items
     async function fetchItems() {
@@ -163,6 +243,10 @@
             <td>${item.description || ''}</td>
             <td>${item.datelost ? item.datelost.split('T')[0] : ''}</td>
             <td>${item.locationlost || ''}</td>
+            <td>
+              <button class="edit-btn" onclick="enableEditing(this.closest('tr'), this)">Edit</button>
+              <button class="delete-btn" onclick="deleteItem(${item.itemid})">Mark as Found</button>
+            </td>
           `;
           tbody.appendChild(row);
         });
@@ -171,7 +255,6 @@
       }
     }
 
-    // Initial load
     fetchItems();
   </script>
 </body>
