@@ -6,13 +6,13 @@ Tools used:
 
 - Backend: Node/Express
 - Frontend: HTML/CSS/JavaScript
-- Database: MySQL
+- Database: MongoDB (Mongoose)
 
 User guide:
 
 ## Overview
 
-This is a simple Lost Items CRUD application. The backend is a Node/Express server that exposes REST endpoints to create, read, update, and delete lost-item records stored in a MySQL database. The frontend is a small static HTML/CSS/JS UI that calls the backend API.
+This is a simple Lost Items CRUD application. The backend is a Node/Express server that exposes REST endpoints to create, read, update, and delete lost-item records stored in a MongoDB database. The frontend is a small static HTML/CSS/JS UI that calls the backend API.
 
 This guide explains how to set up and run the app locally and how to use the UI to perform CRUD operations.
 
@@ -22,21 +22,20 @@ This guide explains how to set up and run the app locally and how to use the UI 
 
 - Node.js
 - npm
-- MySQL server
+- MongoDB (local `mongod`) or MongoDB Atlas
 
-Make sure MySQL is running and you have credentials for a database where the app can create the `lostItems` table.
+If you're running MongoDB locally, make sure `mongod` is running. For a hosted DB you can use a MongoDB Atlas connection string.
 
 ## Configure the backend
 
-1. Create a .env file in the backend folder with the following variables (replace as needed):
+1. Create a `.env` file in the `backend` folder with the following variables (replace as needed):
 
 ```
-DB_HOST=localhost
-DB_USER=your_mysql_user
-DB_PASSWORD=your_mysql_password
-DB_NAME=your_database_name
+MONGO_URI=mongodb://localhost:27017/your_database_name
 PORT=5001
 ```
+
+If using MongoDB Atlas, set `MONGO_URI` to the full connection string Atlas provides (including credentials and DB name).
 
 2. Install backend dependencies and start the server:
 
@@ -46,26 +45,26 @@ npm install
 npm run dev
 ```
 
-The server listens on http://localhost:5001 by default. On successful startup you should see a console log like `Server running on http://localhost:5001` and `Connected to MySQL database`.
+The server listens on http://localhost:5001 by default. On successful startup you should see a console log like `Server running on http://localhost:5001` and `MongoDB connected`.
 
 ## Database notes
 
-The backend expects a table named `lostItems`. A minimal table schema you can run in MySQL is:
+This project uses MongoDB via Mongoose. The Mongoose model is defined in `backend/schema.js`. The schema contains fields for the lost-item records (example shape shown here):
 
-```sql
-create table lostItems (
-	itemid int auto_increment primary key,
-    itemname varchar(50) not null,
-    ownername varchar(50),
-    ownernumber varchar(20),
-    itemcolor varchar(20),
-    description varchar(100),
-    datelost date,
-    locationlost varchar(50)
-);
+```javascript
+{
+	itemID: String,
+	itemName: String,
+	ownerName: String,
+	ownerNumber: Number,
+	itemColor: String,
+	description: String,
+	dateLost: Date,
+	locationLost: String,
+}
 ```
 
-Run that in your MySQL client connected to the `DB_NAME` you set in `.env`.
+You don't need to create tables; MongoDB will create the collection when documents are inserted. If running locally, start your MongoDB server (`mongod`). For Atlas, ensure your `MONGO_URI` has network access enabled for your IP.
 
 ## Serve the frontend
 
