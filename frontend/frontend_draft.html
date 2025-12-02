@@ -139,14 +139,16 @@
       e.preventDefault();
 
       const itemData = {
-        itemname: document.getElementById('itemname').value,
-        ownername: document.getElementById('ownername').value,
-        ownernumber: document.getElementById('ownernumber').value,
-        itemcolor: document.getElementById('itemcolor').value,
+        itemName: document.getElementById('itemname').value,
+        ownerName: document.getElementById('ownername').value,
+        ownerNumber: document.getElementById('ownernumber').value,
+        itemColor: document.getElementById('itemcolor').value,
         description: document.getElementById('description').value,
-        datelost: document.getElementById('datelost').value,
-        locationlost: document.getElementById('locationlost').value
+        dateLost: document.getElementById('datelost').value,
+        locationLost: document.getElementById('locationlost').value
       };
+
+      console.log("Posting:", itemData);
 
       try {
         const response = await fetch(API_URL, {
@@ -155,14 +157,17 @@
           body: JSON.stringify(itemData)
         });
 
-        if (!response.ok) throw new Error('Failed to add item');
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to add item');
+        }
 
         alert('Item added successfully');
         e.target.reset();
         fetchItems();
       } catch (err) {
         console.error(err);
-        alert('Error adding item');
+        alert('Error adding item: ' + err.message);
       }
     });
 
@@ -179,23 +184,23 @@
         fetchItems();
       } catch (err) {
         console.error(err);
-        alert('Error deleting item');
+        alert('Error deleting item: ' + err.message);
       }
     }
 
-    // Edit + Save item
+    // Save edited item
     async function saveItem(id, button) {
       const row = button.closest('tr');
       const cells = row.querySelectorAll('td');
 
       const updatedData = {
-        itemname: cells[1].innerText,
-        ownername: cells[2].innerText,
-        ownernumber: cells[3].innerText,
-        itemcolor: cells[4].innerText,
+        itemName: cells[1].innerText,
+        ownerName: cells[2].innerText,
+        ownerNumber: cells[3].innerText,
+        itemColor: cells[4].innerText,
         description: cells[5].innerText,
-        datelost: cells[6].innerText,
-        locationlost: cells[7].innerText
+        dateLost: cells[6].innerText,
+        locationLost: cells[7].innerText
       };
 
       try {
@@ -205,16 +210,20 @@
           body: JSON.stringify(updatedData)
         });
 
-        if (!res.ok) throw new Error('Update failed');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Update failed');
+        }
 
         alert('Item updated successfully');
         fetchItems();
       } catch (err) {
         console.error(err);
-        alert('Error updating item');
+        alert('Error updating item: ' + err.message);
       }
     }
 
+    // Enable editing of table row
     function enableEditing(row, button) {
       const cells = row.querySelectorAll('td');
       for (let i = 1; i <= 7; i++) cells[i].setAttribute('contenteditable', 'true');
@@ -235,17 +244,17 @@
         items.forEach(item => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${item.itemid}</td>
-            <td>${item.itemname}</td>
-            <td>${item.ownername || ''}</td>
-            <td>${item.ownernumber || ''}</td>
-            <td>${item.itemcolor || ''}</td>
+            <td>${item._id}</td>
+            <td>${item.itemName}</td>
+            <td>${item.ownerName || ''}</td>
+            <td>${item.ownerNumber || ''}</td>
+            <td>${item.itemColor || ''}</td>
             <td>${item.description || ''}</td>
-            <td>${item.datelost ? item.datelost.split('T')[0] : ''}</td>
-            <td>${item.locationlost || ''}</td>
+            <td>${item.dateLost ? item.dateLost.split('T')[0] : ''}</td>
+            <td>${item.locationLost || ''}</td>
             <td>
               <button class="edit-btn" onclick="enableEditing(this.closest('tr'), this)">Edit</button>
-              <button class="delete-btn" onclick="deleteItem(${item.itemid})">Mark as Found</button>
+              <button class="delete-btn" onclick="deleteItem('${item._id}')">Mark as Found</button>
             </td>
           `;
           tbody.appendChild(row);
@@ -255,6 +264,7 @@
       }
     }
 
+    // Initial fetch
     fetchItems();
   </script>
 </body>
